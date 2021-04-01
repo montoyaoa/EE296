@@ -1,3 +1,19 @@
+//PINOUTS FOR MEGA:
+//GPS
+//RX -> 14 (TX3)
+//TX -> 15 (RX3)
+//
+//SD
+//CS -> 10
+//DI -> 51
+//DO -> 50
+//CLK -> 52
+//
+//PRESSURE
+//SIGNAL -> A0
+//
+//WATER LEVEL
+//S -> A1
 
 #include <Adafruit_GPS.h>
 #include <SPI.h>
@@ -10,6 +26,8 @@
 #include <math.h>
 
 const int chipSelect = 10;
+
+
 
 //For the GPS module:
 //TX is connected to RX3 (Digital 15)
