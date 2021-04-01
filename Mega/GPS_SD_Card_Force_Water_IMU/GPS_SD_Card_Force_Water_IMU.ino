@@ -25,33 +25,24 @@
 #include <utility/imumaths.h>
 #include <math.h>
 
-const int chipSelect = 10;
-
-
-
-//For the GPS module:
-//TX is connected to RX3 (Digital 15)
-//RX is connected to TX3 (Digital 14)
 #define GPSSerial Serial3
 
 #define BAUD_RATE 115200
 #define BNO055_SAMPLERATE_DELAY_MS 100
 
-// Connect to the GPS on the hardware port
-Adafruit_GPS GPS(&GPSSerial);
-
+const int chipSelect = 10;
 uint32_t timer = millis();
-
 String outputString = "";
 String filename = "";
-
 const int pressurePin = A0;
 const int waterPin = A1;
+
+// Connect to the GPS on the hardware port
+Adafruit_GPS GPS(&GPSSerial);
 
 Adafruit_BNO055 bno = Adafruit_BNO055();
 Adafruit_BMP085 bmp = Adafruit_BMP085();
 
-int lineCounter = 0;
 
 
 void setup() {
