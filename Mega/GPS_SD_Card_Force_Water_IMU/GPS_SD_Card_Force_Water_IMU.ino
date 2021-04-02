@@ -13,7 +13,7 @@
 //SIGNAL -> A0
 //
 //WATER LEVEL
-//S -> A1
+//SIGNAL -> A1
 
 #include <Adafruit_GPS.h>
 #include <SPI.h>
@@ -134,11 +134,12 @@ void readAndParseGPS() {
   char c = GPS.read();
   // if a sentence is received, we can check the checksum, parse it...
   if (GPS.newNMEAreceived()) {
-    Serial.print(GPS.lastNMEA()); // this also sets the newNMEAreceived() flag to false
+    //Serial.print(GPS.lastNMEA()); // this also sets the newNMEAreceived() flag to false
     if (!GPS.parse(GPS.lastNMEA())) // this also sets the newNMEAreceived() flag to false
       return; // we can fail to parse a sentence in which case we should just wait for another
   }
 }
+
 void initializeGPS(){
   Serial.println("Initializing GPS...");
   // 9600 NMEA is the default baud rate for Adafruit MTK GPS's- some use 4800
@@ -147,13 +148,9 @@ void initializeGPS(){
   GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCONLY);
   GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ); // 1 Hz update rate
 
-  Serial.print("Awaiting GPS Fix...");
-  while(GPS.fix == 0) {
-    readAndParseGPS();
-    delay(500);
-    Serial.print(".");     
-  }
-  
+  Serial.print("Awaiting GPS fix... ");
+  while(GPS.fix == 0) { readAndParseGPS(); }
+  Serial.println("GPS fix found.");
 }
 
 void initializeSD(){
