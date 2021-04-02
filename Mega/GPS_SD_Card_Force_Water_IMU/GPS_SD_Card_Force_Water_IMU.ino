@@ -25,25 +25,26 @@
 #include <utility/imumaths.h>
 #include <math.h>
 
-#define GPSSerial Serial3
-
 #define BAUD_RATE 115200
 #define BNO055_SAMPLERATE_DELAY_MS 100
 
+#define GPSSerial Serial3
+#define PRESSUREPIN A0
+#define WATERPIN A1
+
+//define global variables
 const int chipSelect = 10;
 uint32_t timer = millis();
 String outputString = "";
 String filename = "";
-const int pressurePin = A0;
-const int waterPin = A1;
 
-// Connect to the GPS on the hardware port
+//Initialize the hardware
+//GPS
 Adafruit_GPS GPS(&GPSSerial);
-
+//Orientation
 Adafruit_BNO055 bno = Adafruit_BNO055();
+//Barometric Pressure
 Adafruit_BMP085 bmp = Adafruit_BMP085();
-
-
 
 void setup() {
   // connect at 115200 so we can read the GPS fast enough and echo without dropping chars
@@ -57,27 +58,20 @@ void setup() {
   
   initializeGPS();
   initializeSD();
-
-  //timer = millis();
-
 }
 
 void loop() {
-  // read data from the GPS in the 'main loop'
-  char c = GPS.read();
-  // if a sentence is received, we can check the checksum, parse it...
-  if (GPS.newNMEAreceived()) {
-    if (!GPS.parse(GPS.lastNMEA())) // this also sets the newNMEAreceived() flag to false
-      return; // we can fail to parse a sentence in which case we should just wait for another
-  }
+  
+  readAndParseGPS();
+  
   // approximately every 2 seconds or so, print out the current stats
   if (millis() - timer > 1000) {
     timer = millis(); // reset the timer
     gpsString();
     outputString.concat(", ");
-    outputString.concat(analogRead(pressurePin));
+    outputString.concat(analogRead(PRESSUREPIN));
     outputString.concat(", ");
-    outputString.concat(analogRead(waterPin));
+    outputString.concat(analogRead(WATERPIN));
     outputString.concat(", ");
     outputString.concat(GPS.fix);
     printCalibrationVal();
@@ -107,28 +101,19 @@ void loop() {
 }
 
 void gpsString() {
-  if(filename == NULL && GPS.fix){
-    
-  }
   outputString.concat(GPS.day);
   outputString.concat("/");
   outputString.concat(GPS.month);
   outputString.concat("/20");
   outputString.concat(GPS.year);
   outputString.concat(", ");
-  if (GPS.hour < 10) {
-    outputString.concat("0");
-  }
+  if (GPS.hour < 10) { outputString.concat("0"); }
   outputString.concat(GPS.hour);
   outputString.concat(":");
-  if (GPS.minute < 10) {
-    outputString.concat("0");
-  }
+  if (GPS.minute < 10) { outputString.concat("0"); }
   outputString.concat(GPS.minute);
   outputString.concat(":");
-  if (GPS.seconds < 10) {
-    outputString.concat("0");
-  }
+  if (GPS.seconds < 10) { outputString.concat("0"); }
   outputString.concat(GPS.seconds);
   outputString.concat(", ");
 
@@ -144,6 +129,16 @@ void gpsString() {
   }
 }
 
+void readAndParseGPS() {
+  // read data from the GPS in the 'main loop'
+  char c = GPS.read();
+  // if a sentence is received, we can check the checksum, parse it...
+  if (GPS.newNMEAreceived()) {
+    Serial.print(GPS.lastNMEA()); // this also sets the newNMEAreceived() flag to false
+    if (!GPS.parse(GPS.lastNMEA())) // this also sets the newNMEAreceived() flag to false
+      return; // we can fail to parse a sentence in which case we should just wait for another
+  }
+}
 void initializeGPS(){
   Serial.println("Initializing GPS...");
   // 9600 NMEA is the default baud rate for Adafruit MTK GPS's- some use 4800
@@ -152,21 +147,13 @@ void initializeGPS(){
   GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCONLY);
   GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ); // 1 Hz update rate
 
-  Serial.println("Awaiting GPS Fix...");
+  Serial.print("Awaiting GPS Fix...");
   while(GPS.fix == 0) {
-    char x = GPS.read();
-    if (GPS.newNMEAreceived()) {
-      // a tricky thing here is if we print the NMEA sentence, or data
-      // we end up not listening and catching other sentences!
-      // so be very wary if using OUTPUT_ALLDATA and trying to print out data
-      Serial.print(GPS.lastNMEA()); // this also sets the newNMEAreceived() flag to false
-      if (!GPS.parse(GPS.lastNMEA())) // this also sets the newNMEAreceived() flag to false
-        return; // we can fail to parse a sentence in which case we should just wait for another
-    }
-      delay(500);
+    readAndParseGPS();
+    delay(500);
+    Serial.print(".");     
   }
-  Serial.println("GPS Fix found.");
-  Serial.println(GPS.fix);
+  
 }
 
 void initializeSD(){
