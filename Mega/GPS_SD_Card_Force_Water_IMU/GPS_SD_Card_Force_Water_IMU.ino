@@ -28,6 +28,9 @@
 #define BAUD_RATE 115200
 #define BNO055_SAMPLERATE_DELAY_MS 100
 
+//set this to true to ignore the need to have a GPS fix to continue initialization
+#define IGNOREGPSFIX false
+
 //define pin assignments
 #define GPSSerial Serial3
 #define PRESSUREPIN A0
@@ -94,12 +97,14 @@ void initializeGPS() {
   GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCONLY);
   GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ); // 1 Hz update rate
 
-  //wait until first fix to continue initialization
-  Serial.print("Awaiting GPS fix... ");
-//  while (GPS.fix == 0) {
-//    readAndParseGPS();
-//  }
-  Serial.println("GPS fix found.");
+  if(!IGNOREGPSFIX){
+    //wait until first fix to continue initialization
+    Serial.print("Awaiting GPS fix... ");
+    while (GPS.fix == 0) {
+      readAndParseGPS();
+    }
+    Serial.println("GPS fix found.");
+  }
 }
 
 void initializeSD() {
@@ -108,7 +113,10 @@ void initializeSD() {
   SD.begin(CHIPSELECT);
   Serial.println("SD Initialized");
 
-filename = "test";
+  if(IGNOREGPSFIX) {
+    filename = "test";
+  }
+  
   //generate a filename
   Serial.println("Generating filename from GPS date/time data...");
   while (filename == "00000000" || filename == "") {
