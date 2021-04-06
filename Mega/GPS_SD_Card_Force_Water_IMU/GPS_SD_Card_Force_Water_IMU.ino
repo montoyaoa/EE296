@@ -96,9 +96,9 @@ void initializeGPS() {
 
   //wait until first fix to continue initialization
   Serial.print("Awaiting GPS fix... ");
-  while (GPS.fix == 0) {
-    readAndParseGPS();
-  }
+//  while (GPS.fix == 0) {
+//    readAndParseGPS();
+//  }
   Serial.println("GPS fix found.");
 }
 
@@ -108,6 +108,7 @@ void initializeSD() {
   SD.begin(CHIPSELECT);
   Serial.println("SD Initialized");
 
+filename = "test";
   //generate a filename
   Serial.println("Generating filename from GPS date/time data...");
   while (filename == "00000000" || filename == "") {
