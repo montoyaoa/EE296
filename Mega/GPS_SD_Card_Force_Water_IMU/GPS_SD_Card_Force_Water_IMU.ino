@@ -4,7 +4,7 @@
 //TX -> 15 (RX3)
 //
 //SD
-//CS -> 10
+//CS -> 9
 //DI -> 51
 //DO -> 50
 //CLK -> 52
@@ -36,7 +36,11 @@
 #define GPSSerial Serial3
 #define PRESSUREPIN A0
 #define WATERPIN A1
-#define CHIPSELECT 10
+#define CHIPSELECT 9
+#define REDLED 10
+#define YELLOWLED 11
+#define GREENLED 12
+#define BLUELED 13
 
 //define global variables
 uint32_t timer = millis();
@@ -50,19 +54,24 @@ Adafruit_GPS GPS(&GPSSerial);
 Adafruit_BNO055 bno = Adafruit_BNO055();
 //Barometric Pressure (depending on sensor)
 Adafruit_BMP085 bmp = Adafruit_BMP085();
-Adafruit_MPL3115A2 baro = Adafruit_MPL3115A2();
+Adafruit_MPL3115A2 mpl = Adafruit_MPL3115A2();
 
 void setup() {
   // connect at 115200 so we can read the GPS fast enough and echo without dropping chars
   // also spit it out
   Serial.begin(BAUD_RATE);
 
+  pinMode(REDLED, OUTPUT);
+  pinMode(YELLOWLED, OUTPUT);
+  pinMode(GREENLED, OUTPUT);
+  pinMode(BLUELED, OUTPUT);
+  
   //initialize orientation sensor
   bno.begin();
   delay(1000);
   bno.setExtCrystalUse(true);
 
-  //initialize barometric pressure sensor
+  //initialize mplmetric pressure sensor
   bmp.begin();
 
   initializeGPS();
@@ -74,10 +83,12 @@ void loop() {
 
   readAndParseGPS();
 
+  statusLEDs();
+
   // approximately every second or so, print out the current stats
   if (millis() - timer > 1000) {
-    timer = millis(); // reset the timer
-
+    //reset the timer
+    timer = millis();
     //add sensor data to a single output string
     gpsString();
     pressureString();
@@ -86,23 +97,27 @@ void loop() {
     quatString();
     eulerString();
     baroString();
-
+    //write the output string to the SD card
     writeToSD();
+    //clear the output string for the next readings
     outputString = "";
   }
 }
 
 void initializeGPS() {
-  //initialize GPS
   Serial.println("Initializing GPS...");
   // 9600 NMEA is the default baud rate for Adafruit MTK GPS's- some use 4800
   GPS.begin(9600);
+  //only use basic position data
   GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCONLY);
-  GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ); // 1 Hz update rate
+  //update the GPS data once per second
+  GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);
 
+  //ignore the need for a GPS fix if not necessary
   if(!IGNOREGPSFIX){
     //wait until first fix to continue initialization
     Serial.print("Awaiting GPS fix... ");
+    //continually read from the GPS sensor until fix is found
     while (GPS.fix == 0) {
       readAndParseGPS();
     }
@@ -115,12 +130,13 @@ void initializeSD() {
   Serial.println("Initializing SD...");
   SD.begin(CHIPSELECT);
   Serial.println("SD Initialized");
-
+  
+  //set a dummy filename if GPS fix is being ignored
   if(IGNOREGPSFIX) {
     filename = "test";
   }
   
-  //generate a filename
+  //generate a filename based on the date and time
   Serial.println("Generating filename from GPS date/time data...");
   while (filename == "00000000" || filename == "") {
     char c = GPS.read();
@@ -143,9 +159,8 @@ void initializeSD() {
 
   //write header data to SD
   File dataFile = SD.open(filename, FILE_WRITE);
-  // if the file is available, write to it:
   if (dataFile) {
-    dataFile.println("Date, Time, Latitude, Longitude, GPS Fix, Force, Water Level, Accel, Gyro, Magne, Sys, Quat W, Quat X, Quat Y, Quat Z, Euler X, Euler Y, Euler Z, Pressure (Pa), Altitude (m), Internal Temperature (C)");
+    dataFile.println("Date, Time, Latitude, Longitude, GPS Fix, Force, Water Level, Accel Calibration, Gyro Calibration, Magne Calibration, Sys Calibration, Quat W, Quat X, Quat Y, Quat Z, Euler X, Euler Y, Euler Z, Pressure (Pa), Altitude (m), Internal Temperature (C)");
     Serial.print("Header data written to ");
     Serial.println(filename);
   }
@@ -168,8 +183,7 @@ void readAndParseGPS() {
 }
 
 void writeToSD() {
-  // open the file. note that only one file can be open at a time,
-  // so you have to close this one before opening another.
+  // open the file
   File dataFile = SD.open(filename, FILE_WRITE);
   // if the file is available, write to it:
   if (dataFile) {
@@ -264,16 +278,21 @@ void eulerString() {
 }
 
 void baroString() {
-  if(!baro.begin()) {
+  if(!mpl.begin()) {
     outputString.concat("0, 0, 0");
   }
   else {
-    outputString.concat(baro.getPressure());
+    outputString.concat(mpl.getPressure());
     outputString.concat(", ");
-    outputString.concat(baro.getAltitude());
+    outputString.concat(mpl.getAltitude());
     outputString.concat(", ");
-    outputString.concat(baro.getTemperature());
+    outputString.concat(mpl.getTemperature());
   }
-  
+}
 
+void statusLEDs() {
+  digitalWrite(REDLED, HIGH);
+  digitalWrite(YELLOWLED, HIGH);
+  digitalWrite(GREENLED, HIGH);
+  digitalWrite(BLUELED, HIGH);
 }
