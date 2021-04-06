@@ -21,6 +21,7 @@
 #include <Wire.h>
 #include <Adafruit_BMP085.h>
 #include <Adafruit_BNO055.h>
+#include <Adafruit_MPL3115A2.h>
 #include <Adafruit_Sensor.h>
 #include <utility/imumaths.h>
 #include <math.h>
@@ -47,8 +48,9 @@ String filename = "";
 Adafruit_GPS GPS(&GPSSerial);
 //Orientation
 Adafruit_BNO055 bno = Adafruit_BNO055();
-//Barometric Pressure
+//Barometric Pressure (depending on sensor)
 Adafruit_BMP085 bmp = Adafruit_BMP085();
+Adafruit_MPL3115A2 baro = Adafruit_MPL3115A2();
 
 void setup() {
   // connect at 115200 so we can read the GPS fast enough and echo without dropping chars
@@ -83,6 +85,7 @@ void loop() {
     calibrationString();
     quatString();
     eulerString();
+    baroString();
 
     writeToSD();
     outputString = "";
@@ -142,7 +145,7 @@ void initializeSD() {
   File dataFile = SD.open(filename, FILE_WRITE);
   // if the file is available, write to it:
   if (dataFile) {
-    dataFile.println("Date, Time, Latitude, Longitude, GPS Fix, Force, Water Level, Accel, Gyro, Magne, Sys, Quat W, Quat X, Quat Y, Quat Z, Euler X, Euler Y, Euler Z");
+    dataFile.println("Date, Time, Latitude, Longitude, GPS Fix, Force, Water Level, Accel, Gyro, Magne, Sys, Quat W, Quat X, Quat Y, Quat Z, Euler X, Euler Y, Euler Z, Pressure (Pa), Altitude (m), Internal Temperature (C)");
     Serial.print("Header data written to ");
     Serial.println(filename);
   }
@@ -207,9 +210,7 @@ void gpsString() {
     outputString.concat(String(GPS.longitudeDegrees, 5));
   }
   else {
-    outputString.concat("0");
-    outputString.concat(", ");
-    outputString.concat("0");
+    outputString.concat("0, 0");
   }
 
   outputString.concat(", ");
@@ -259,4 +260,20 @@ void eulerString() {
   outputString.concat(euler.y());
   outputString.concat(", ");
   outputString.concat(euler.z());
+  outputString.concat(", ");
+}
+
+void baroString() {
+  if(!baro.begin()) {
+    outputString.concat("0, 0, 0");
+  }
+  else {
+    outputString.concat(baro.getPressure());
+    outputString.concat(", ");
+    outputString.concat(baro.getAltitude());
+    outputString.concat(", ");
+    outputString.concat(baro.getTemperature());
+  }
+  
+
 }
