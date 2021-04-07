@@ -14,6 +14,13 @@
 //
 //WATER LEVEL
 //SIGNAL -> A1
+//
+//LEDS
+//ANODE -> ARDUINO, CATHODE -> 220 OHM -> GND
+//RED (GPS LOCK) -> 10
+//YELLOW (SD AVAILABLE) -> 11
+//GREEN (WATER INTRUSION) -> 12
+//BLUE (ORIENTATION CALIBRATION) -> 13
 
 #include <Adafruit_GPS.h>
 #include <SPI.h>
@@ -224,9 +231,11 @@ void gpsString() {
     outputString.concat(String(GPS.latitudeDegrees, 5));
     outputString.concat(", ");
     outputString.concat(String(GPS.longitudeDegrees, 5));
+    digitalWrite(REDLED, HIGH);
   }
   else {
     outputString.concat("0, 0");
+    digitalWrite(REDLED, LOW);
   }
 
   outputString.concat(", ");
@@ -239,8 +248,15 @@ void pressureString() {
 }
 
 void waterIntrusionString() {
+  int waterLevel = analogRead(WATERPIN);
+  if(waterLevel >= 250) {
+    digitalWrite(GREENLED, HIGH);
+  }
+  else {
+    digitalWrite(GREENLED, LOW);
+  }
   outputString.concat(", ");
-  outputString.concat(analogRead(WATERPIN));
+  outputString.concat(waterLevel);
 }
 
 void calibrationString() {
@@ -255,6 +271,12 @@ void calibrationString() {
   outputString.concat(", ");
   outputString.concat(int(sys));
   outputString.concat(", ");
+  if(int(sys) >= 3) {
+    digitalWrite(BLUELED, HIGH);
+  }
+  else {
+    digitalWrite(BLUELED, LOW);
+  }
 }
 
 void quatString() {
@@ -293,14 +315,14 @@ void baroString() {
 }
 
 void statusLEDs() {
-  if(GPS.fix) {
-    digitalWrite(REDLED, HIGH);
-  }
-  else {
-    digitalWrite(REDLED, LOW);
-  }
-  
-  //digitalWrite(YELLOWLED, HIGH);
-  digitalWrite(GREENLED, HIGH);
-  digitalWrite(BLUELED, HIGH);
+//  if(GPS.fix) {
+//    digitalWrite(REDLED, HIGH);
+//  }
+//  else {
+//    digitalWrite(REDLED, LOW);
+//  }
+//  
+//  //digitalWrite(YELLOWLED, HIGH);
+//  digitalWrite(GREENLED, HIGH);
+//  digitalWrite(BLUELED, HIGH);
 }
