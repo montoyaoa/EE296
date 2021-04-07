@@ -192,11 +192,13 @@ void writeToSD() {
     Serial.print(filename);
     Serial.print(" : ");
     Serial.println(outputString);
+    digitalWrite(YELLOWLED, HIGH);
   }
   // if the file isn't open, pop up an error:
   else {
     Serial.print("error opening ");
     Serial.println(filename);
+    digitalWrite(YELLOWLED, LOW);
   }
   dataFile.close();
 }
@@ -291,8 +293,14 @@ void baroString() {
 }
 
 void statusLEDs() {
-  digitalWrite(REDLED, HIGH);
-  digitalWrite(YELLOWLED, HIGH);
+  if(GPS.fix) {
+    digitalWrite(REDLED, HIGH);
+  }
+  else {
+    digitalWrite(REDLED, LOW);
+  }
+  
+  //digitalWrite(YELLOWLED, HIGH);
   digitalWrite(GREENLED, HIGH);
   digitalWrite(BLUELED, HIGH);
 }
