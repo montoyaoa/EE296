@@ -4,7 +4,7 @@
 //TX -> 15 (RX3)
 //
 //SD
-//CS -> 9
+//CS -> 53
 //DI -> 51
 //DO -> 50
 //CLK -> 52
@@ -17,10 +17,10 @@
 //
 //LEDS
 //ANODE -> ARDUINO, CATHODE -> 220 OHM -> GND
-//RED (GPS LOCK) -> 10
-//YELLOW (SD AVAILABLE) -> 11
-//GREEN (WATER INTRUSION) -> 12
-//BLUE (ORIENTATION CALIBRATION) -> 13
+//RED (GPS LOCK) -> 8
+//YELLOW (SD AVAILABLE) -> 9
+//GREEN (WATER INTRUSION) -> 10
+//BLUE (ORIENTATION CALIBRATION) -> 11
 
 #include <Adafruit_GPS.h>
 #include <SPI.h>
@@ -43,11 +43,11 @@
 #define GPSSerial Serial3
 #define PRESSUREPIN A0
 #define WATERPIN A1
-#define CHIPSELECT 9
-#define REDLED 10
-#define YELLOWLED 11
-#define GREENLED 12
-#define BLUELED 13
+#define CHIPSELECT 53
+#define REDLED 8
+#define YELLOWLED 9
+#define GREENLED 10
+#define BLUELED 11
 
 //define global variables
 uint32_t timer = millis();
