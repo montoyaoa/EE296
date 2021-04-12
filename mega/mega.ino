@@ -39,6 +39,9 @@
 //set this to true to ignore the need to have a GPS fix to continue initialization
 #define IGNOREGPSFIX false
 
+//set this to true to write to the Serial IO for debugging
+#define SERIALLOGGING true
+
 //define pin assignments
 #define GPSSerial Serial3
 #define PRESSUREPIN A0
@@ -112,7 +115,7 @@ void loop() {
 }
 
 void initializeGPS() {
-  Serial.println("Initializing GPS...");
+  if(SERIALLOGGING) { Serial.println("Initializing GPS..."); }
   // 9600 NMEA is the default baud rate for Adafruit MTK GPS's- some use 4800
   GPS.begin(9600);
   //only use basic position data
@@ -123,28 +126,26 @@ void initializeGPS() {
   //ignore the need for a GPS fix if not necessary
   if(!IGNOREGPSFIX){
     //wait until first fix to continue initialization
-    Serial.print("Awaiting GPS fix... ");
+    if(SERIALLOGGING) { Serial.print("Awaiting GPS fix... "); }
     //continually read from the GPS sensor until fix is found
     while (GPS.fix == 0) {
       readAndParseGPS();
     }
-    Serial.println("GPS fix found.");
+    if(SERIALLOGGING) { Serial.println("GPS fix found."); }
   }
 }
 
 void initializeSD() {
   //initialize SD
-  Serial.println("Initializing SD...");
+  if(SERIALLOGGING) { Serial.println("Initializing SD..."); }
   SD.begin(CHIPSELECT);
-  Serial.println("SD Initialized");
+  if(SERIALLOGGING) { Serial.println("SD Initialized"); }
   
   //set a dummy filename if GPS fix is being ignored
-  if(IGNOREGPSFIX) {
-    filename = "test";
-  }
+  if(IGNOREGPSFIX) { filename = "test"; }
   
   //generate a filename based on the date and time
-  Serial.println("Generating filename from GPS date/time data...");
+  if(SERIALLOGGING) { Serial.println("Generating filename from GPS date/time data..."); }
   while (filename == "00000000" || filename == "") {
     char c = GPS.read();
     GPS.parse(GPS.lastNMEA());
@@ -160,20 +161,27 @@ void initializeSD() {
     filename.concat(GPS.minute);
   }
   filename.concat(".csv");
-  Serial.print("Filename ");
-  Serial.print(filename);
-  Serial.println(" created");
+  if(SERIALLOGGING){ 
+    Serial.print("Filename ");
+    Serial.print(filename);
+    Serial.println(" created");
+  }
+  
 
   //write header data to SD
   File dataFile = SD.open(filename, FILE_WRITE);
   if (dataFile) {
     dataFile.println("Date, Time, Latitude, Longitude, GPS Fix, Force, Water Level, Accel Calibration, Gyro Calibration, Magne Calibration, Sys Calibration, Quat W, Quat X, Quat Y, Quat Z, Euler X, Euler Y, Euler Z, Pressure (Pa), Altitude (m), Internal Temperature (C)");
-    Serial.print("Header data written to ");
-    Serial.println(filename);
+    if(SERIALLOGGING) {
+      Serial.print("Header data written to ");
+      Serial.println(filename);
+    }
   }
   else {
-    Serial.print("Unable to open ");
-    Serial.println(filename);
+    if(SERIALLOGGING) {
+      Serial.print("Unable to open ");
+      Serial.println(filename);
+    }
   }
   dataFile.close();
 }
@@ -195,16 +203,20 @@ void writeToSD() {
   // if the file is available, write to it:
   if (dataFile) {
     dataFile.println(outputString);
-    Serial.print("Printed to ");
-    Serial.print(filename);
-    Serial.print(" : ");
-    Serial.println(outputString);
+    if(SERIALLOGGING) {
+      Serial.print("Printed to ");
+      Serial.print(filename);
+      Serial.print(" : ");
+      Serial.println(outputString);
+    }
     digitalWrite(YELLOWLED, HIGH);
   }
   // if the file isn't open, pop up an error:
   else {
-    Serial.print("error opening ");
-    Serial.println(filename);
+    if(SERIALLOGGING) {
+      Serial.print("error opening ");
+      Serial.println(filename);
+    }
     digitalWrite(YELLOWLED, LOW);
   }
   dataFile.close();
