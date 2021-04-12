@@ -21,6 +21,9 @@
 //YELLOW (SD AVAILABLE) -> 9
 //GREEN (WATER INTRUSION) -> 10
 //BLUE (ORIENTATION CALIBRATION) -> 11
+//
+//RESET
+//RST -> 2
 
 #include <Adafruit_GPS.h>
 #include <SPI.h>
@@ -37,7 +40,7 @@
 #define BNO055_SAMPLERATE_DELAY_MS 100
 
 //set this to true to ignore the need to have a GPS fix to continue initialization
-#define IGNOREGPSFIX false
+#define IGNOREGPSFIX true
 
 //set this to true to write to the Serial IO for debugging
 #define SERIALLOGGING true
@@ -51,6 +54,7 @@
 #define YELLOWLED 9
 #define GREENLED 10
 #define BLUELED 11
+#define RESETPIN 2
 
 //define global variables
 uint32_t timer = millis();
@@ -70,11 +74,14 @@ void setup() {
   // connect at 115200 so we can read the GPS fast enough and echo without dropping chars
   // also spit it out
   Serial.begin(BAUD_RATE);
+  digitalWrite(RESETPIN, HIGH);
 
   pinMode(REDLED, OUTPUT);
   pinMode(YELLOWLED, OUTPUT);
   pinMode(GREENLED, OUTPUT);
   pinMode(BLUELED, OUTPUT);
+  pinMode(RESETPIN, OUTPUT);
+  
   
   //initialize orientation sensor
   bno.begin();
@@ -218,6 +225,7 @@ void writeToSD() {
       Serial.println(filename);
     }
     digitalWrite(YELLOWLED, LOW);
+    digitalWrite(RESETPIN, LOW);
   }
   dataFile.close();
 }
@@ -283,7 +291,7 @@ void calibrationString() {
   outputString.concat(", ");
   outputString.concat(int(sys));
   outputString.concat(", ");
-  if(int(sys) >= 3) {
+  if((int(accel) == 3) && (int(gyro) == 3) && (int(magne) == 3)) {
     digitalWrite(BLUELED, HIGH);
   }
   else {
