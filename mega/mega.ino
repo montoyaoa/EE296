@@ -25,6 +25,7 @@
 //RESET
 //RST -> 2
 
+#include "RTClib.h"
 #include <Adafruit_GPS.h>
 #include <SPI.h>
 #include <SD.h>
@@ -69,6 +70,8 @@ Adafruit_BNO055 bno = Adafruit_BNO055();
 //Barometric Pressure (depending on sensor)
 Adafruit_BMP085 bmp = Adafruit_BMP085();
 Adafruit_MPL3115A2 mpl = Adafruit_MPL3115A2();
+//RTC
+RTC_DS3231 rtc;
 
 void setup() {
   // connect at 115200 so we can read the GPS fast enough and echo without dropping chars
@@ -91,22 +94,27 @@ void setup() {
   //initialize mplmetric pressure sensor
   bmp.begin();
 
+  //initialize real time clock
+  rtc.begin();
+
   initializeGPS();
 
   initializeSD();
 }
 
 void loop() {
-
+  DateTime now = rtc.now();
   readAndParseGPS();
 
   statusLEDs();
 
   // approximately every second or so, print out the current stats
   if (millis() - timer > 1000) {
+    alignDateTime(now);
     //reset the timer
     timer = millis();
     //add sensor data to a single output string
+    timeString(now);
     gpsString();
     pressureString();
     waterIntrusionString();
@@ -230,22 +238,33 @@ void writeToSD() {
   dataFile.close();
 }
 
-void gpsString() {
-  outputString.concat(GPS.day);
+void alignDateTime(DateTime now) {
+ if(GPS.fix == 1 && (now.year() != GPS.year || now.month() != GPS.month || now.day() != GPS.day || now.hour() != GPS.hour || now.minute() != GPS.minute || now.second() != GPS.seconds)) {
+      if(SERIALLOGGING) {
+      Serial.println("Adjusting RTC time to match GPS fix");
+      }
+      rtc.adjust(DateTime(GPS.year, GPS.month, GPS.day, GPS.hour, GPS.minute, GPS.seconds));
+    }
+}
+
+void timeString(DateTime now) {
+  outputString.concat(now.day());
   outputString.concat("/");
-  outputString.concat(GPS.month);
-  outputString.concat("/20");
-  outputString.concat(GPS.year);
+  outputString.concat(now.month());
+  outputString.concat(now.year());
   outputString.concat(", ");
-  if (GPS.hour < 10) { outputString.concat("0"); }
-  outputString.concat(GPS.hour);
+  if (now.hour() < 10) { outputString.concat("0"); }
+  outputString.concat(now.hour());
   outputString.concat(":");
-  if (GPS.minute < 10) { outputString.concat("0"); }
-  outputString.concat(GPS.minute);
+  if (now.minute() < 10) { outputString.concat("0"); }
+  outputString.concat(now.minute());
   outputString.concat(":");
-  if (GPS.seconds < 10) { outputString.concat("0"); }
-  outputString.concat(GPS.seconds);
+  if (now.second() < 10) { outputString.concat("0"); }
+  outputString.concat(now.second());
   outputString.concat(", ");
+}
+void gpsString() {
+
 
   if (GPS.fix) {
     outputString.concat(String(GPS.latitudeDegrees, 5));
