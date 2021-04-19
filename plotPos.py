@@ -54,7 +54,7 @@ def get_total_row_val(fn)
 			row_count += 1
 	return row_count
 
-def read_csv(fn):
+def read_csv(fn, p, qw, qx, qy, qz, ex, ey, ez):
 	with open(fn) as csv_file:
 		csv_reader = csv.reader(csv_file, delimiter=',')
 		next(csv_reader) #skip header row
