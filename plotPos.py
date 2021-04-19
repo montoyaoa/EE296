@@ -1,5 +1,6 @@
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import pyplot as plt
+import csv
 import numpy as np
 import scipy.integrate as integrate
 import math
@@ -11,6 +12,17 @@ INITIAL_POSITION = [0, 0, 0]
 
 PORT = '/dev/cu.usbserial-1410'
 BAUD_RATE = 115200
+
+FILE_NAME = 'file.csv'
+
+# PRESSURE_INDEX = 
+# QUAT_W_INDEX = 
+# QUAT_X_INDEX = 
+# QUAT_Y_INDEX = 
+# QUAT_Z_INDEX = 
+# EULER_X_INDEX = 
+# EULER_Y_INDEX = 
+# EULER_Z_INDEX = 
 
 def get_velocity_vector(magnitude, angle_x, angle_y, angle_z):
 	v_xy = magnitude * math.cos(angle_y*math.pi/180)
@@ -32,6 +44,13 @@ def get_next_position_vector(current_pos, v_x, v_y, v_z,
 		return [current_pos[0] + r_x, 
 				current_pos[1] + r_y, 
 				current_pos[2] + r_z]
+
+def read_csv(fn):
+	with open(fn) as csv_file:
+		csv_reader = csv.reader(csv_file, delimiter=',')
+		next(csv_reader) #skip header row
+		for row in csv_reader:
+			# assign values in each col to appropriate array
 
 def main():
 	ser = serial.Serial(PORT, BAUD_RATE)
