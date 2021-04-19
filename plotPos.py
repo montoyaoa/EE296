@@ -45,6 +45,15 @@ def get_next_position_vector(current_pos, v_x, v_y, v_z,
 				current_pos[1] + r_y, 
 				current_pos[2] + r_z]
 
+def get_total_row_val(fn)
+	with open(fn) as csv_file:
+		csv_reader = csv.reader(csv_file, delimiter=',')
+		next(csv_reader) #skip header row
+		row_count = 0
+		for row in csv_reader:
+			row_count += 1
+	return row_count
+
 def read_csv(fn):
 	with open(fn) as csv_file:
 		csv_reader = csv.reader(csv_file, delimiter=',')
