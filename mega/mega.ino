@@ -21,7 +21,11 @@
 //YELLOW (SD AVAILABLE) -> 9
 //GREEN (WATER INTRUSION) -> 10
 //BLUE (ORIENTATION CALIBRATION) -> 11
+//
+//RESET
+//RST -> 2
 
+#include "RTClib.h"
 #include <Adafruit_GPS.h>
 #include <SPI.h>
 #include <SD.h>
@@ -37,7 +41,10 @@
 #define BNO055_SAMPLERATE_DELAY_MS 100
 
 //set this to true to ignore the need to have a GPS fix to continue initialization
-#define IGNOREGPSFIX false
+#define IGNOREGPSFIX true
+
+//set this to true to write to the Serial IO for debugging
+#define SERIALLOGGING true
 
 //define pin assignments
 #define GPSSerial Serial3
@@ -48,6 +55,7 @@
 #define YELLOWLED 9
 #define GREENLED 10
 #define BLUELED 11
+#define RESETPIN 2
 
 //define global variables
 uint32_t timer = millis();
@@ -62,16 +70,21 @@ Adafruit_BNO055 bno = Adafruit_BNO055();
 //Barometric Pressure (depending on sensor)
 Adafruit_BMP085 bmp = Adafruit_BMP085();
 Adafruit_MPL3115A2 mpl = Adafruit_MPL3115A2();
+//RTC
+RTC_DS3231 rtc;
 
 void setup() {
   // connect at 115200 so we can read the GPS fast enough and echo without dropping chars
   // also spit it out
   Serial.begin(BAUD_RATE);
+  digitalWrite(RESETPIN, HIGH);
 
   pinMode(REDLED, OUTPUT);
   pinMode(YELLOWLED, OUTPUT);
   pinMode(GREENLED, OUTPUT);
   pinMode(BLUELED, OUTPUT);
+  pinMode(RESETPIN, OUTPUT);
+  
   
   //initialize orientation sensor
   bno.begin();
@@ -81,22 +94,27 @@ void setup() {
   //initialize mplmetric pressure sensor
   bmp.begin();
 
+  //initialize real time clock
+  rtc.begin();
+
   initializeGPS();
 
   initializeSD();
 }
 
 void loop() {
-
+  DateTime now = rtc.now();
   readAndParseGPS();
 
   statusLEDs();
 
   // approximately every second or so, print out the current stats
   if (millis() - timer > 1000) {
+    alignDateTime(now);
     //reset the timer
     timer = millis();
     //add sensor data to a single output string
+    timeString(now);
     gpsString();
     pressureString();
     waterIntrusionString();
@@ -112,7 +130,7 @@ void loop() {
 }
 
 void initializeGPS() {
-  Serial.println("Initializing GPS...");
+  if(SERIALLOGGING) { Serial.println("Initializing GPS..."); }
   // 9600 NMEA is the default baud rate for Adafruit MTK GPS's- some use 4800
   GPS.begin(9600);
   //only use basic position data
@@ -123,28 +141,26 @@ void initializeGPS() {
   //ignore the need for a GPS fix if not necessary
   if(!IGNOREGPSFIX){
     //wait until first fix to continue initialization
-    Serial.print("Awaiting GPS fix... ");
+    if(SERIALLOGGING) { Serial.print("Awaiting GPS fix... "); }
     //continually read from the GPS sensor until fix is found
     while (GPS.fix == 0) {
       readAndParseGPS();
     }
-    Serial.println("GPS fix found.");
+    if(SERIALLOGGING) { Serial.println("GPS fix found."); }
   }
 }
 
 void initializeSD() {
   //initialize SD
-  Serial.println("Initializing SD...");
+  if(SERIALLOGGING) { Serial.println("Initializing SD..."); }
   SD.begin(CHIPSELECT);
-  Serial.println("SD Initialized");
+  if(SERIALLOGGING) { Serial.println("SD Initialized"); }
   
   //set a dummy filename if GPS fix is being ignored
-  if(IGNOREGPSFIX) {
-    filename = "test";
-  }
+  if(IGNOREGPSFIX) { filename = "test"; }
   
   //generate a filename based on the date and time
-  Serial.println("Generating filename from GPS date/time data...");
+  if(SERIALLOGGING) { Serial.println("Generating filename from GPS date/time data..."); }
   while (filename == "00000000" || filename == "") {
     char c = GPS.read();
     GPS.parse(GPS.lastNMEA());
@@ -160,20 +176,27 @@ void initializeSD() {
     filename.concat(GPS.minute);
   }
   filename.concat(".csv");
-  Serial.print("Filename ");
-  Serial.print(filename);
-  Serial.println(" created");
+  if(SERIALLOGGING){ 
+    Serial.print("Filename ");
+    Serial.print(filename);
+    Serial.println(" created");
+  }
+  
 
   //write header data to SD
   File dataFile = SD.open(filename, FILE_WRITE);
   if (dataFile) {
     dataFile.println("Date, Time, Latitude, Longitude, GPS Fix, Force, Water Level, Accel Calibration, Gyro Calibration, Magne Calibration, Sys Calibration, Quat W, Quat X, Quat Y, Quat Z, Euler X, Euler Y, Euler Z, Pressure (Pa), Altitude (m), Internal Temperature (C)");
-    Serial.print("Header data written to ");
-    Serial.println(filename);
+    if(SERIALLOGGING) {
+      Serial.print("Header data written to ");
+      Serial.println(filename);
+    }
   }
   else {
-    Serial.print("Unable to open ");
-    Serial.println(filename);
+    if(SERIALLOGGING) {
+      Serial.print("Unable to open ");
+      Serial.println(filename);
+    }
   }
   dataFile.close();
 }
@@ -195,37 +218,53 @@ void writeToSD() {
   // if the file is available, write to it:
   if (dataFile) {
     dataFile.println(outputString);
-    Serial.print("Printed to ");
-    Serial.print(filename);
-    Serial.print(" : ");
-    Serial.println(outputString);
+    if(SERIALLOGGING) {
+      Serial.print("Printed to ");
+      Serial.print(filename);
+      Serial.print(" : ");
+      Serial.println(outputString);
+    }
     digitalWrite(YELLOWLED, HIGH);
   }
   // if the file isn't open, pop up an error:
   else {
-    Serial.print("error opening ");
-    Serial.println(filename);
+    if(SERIALLOGGING) {
+      Serial.print("error opening ");
+      Serial.println(filename);
+    }
     digitalWrite(YELLOWLED, LOW);
+    digitalWrite(RESETPIN, LOW);
   }
   dataFile.close();
 }
 
-void gpsString() {
-  outputString.concat(GPS.day);
+void alignDateTime(DateTime now) {
+ if(GPS.fix == 1 && (now.year() != GPS.year || now.month() != GPS.month || now.day() != GPS.day || now.hour() != GPS.hour || now.minute() != GPS.minute || now.second() != GPS.seconds)) {
+      if(SERIALLOGGING) {
+      Serial.println("Adjusting RTC time to match GPS fix");
+      }
+      rtc.adjust(DateTime(GPS.year, GPS.month, GPS.day, GPS.hour, GPS.minute, GPS.seconds));
+    }
+}
+
+void timeString(DateTime now) {
+  outputString.concat(now.day());
   outputString.concat("/");
-  outputString.concat(GPS.month);
-  outputString.concat("/20");
-  outputString.concat(GPS.year);
+  outputString.concat(now.month());
+  outputString.concat(now.year());
   outputString.concat(", ");
-  if (GPS.hour < 10) { outputString.concat("0"); }
-  outputString.concat(GPS.hour);
+  if (now.hour() < 10) { outputString.concat("0"); }
+  outputString.concat(now.hour());
   outputString.concat(":");
-  if (GPS.minute < 10) { outputString.concat("0"); }
-  outputString.concat(GPS.minute);
+  if (now.minute() < 10) { outputString.concat("0"); }
+  outputString.concat(now.minute());
   outputString.concat(":");
-  if (GPS.seconds < 10) { outputString.concat("0"); }
-  outputString.concat(GPS.seconds);
+  if (now.second() < 10) { outputString.concat("0"); }
+  outputString.concat(now.second());
   outputString.concat(", ");
+}
+void gpsString() {
+
 
   if (GPS.fix) {
     outputString.concat(String(GPS.latitudeDegrees, 5));
@@ -271,7 +310,7 @@ void calibrationString() {
   outputString.concat(", ");
   outputString.concat(int(sys));
   outputString.concat(", ");
-  if(int(sys) >= 3) {
+  if((int(accel) == 3) && (int(gyro) == 3) && (int(magne) == 3)) {
     digitalWrite(BLUELED, HIGH);
   }
   else {
