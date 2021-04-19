@@ -61,6 +61,11 @@ def read_csv(fn, p, qw, qx, qy, qz, ex, ey, ez):
 		for row in csv_reader:
 			# assign values in each col to appropriate array
 
+def get_z_position(p, z):
+	for x in p:
+		z = np.append((((x * 0.06103515625)/0.04382512987)/14.69595)*33)
+	return z
+
 def main():
 	ser = serial.Serial(PORT, BAUD_RATE)
 	time.sleep(1)
