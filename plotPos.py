@@ -63,8 +63,13 @@ def read_csv(fn, p, qw, qx, qy, qz, ex, ey, ez):
 
 def get_z_position(p, z):
 	for x in p:
+		#offset = 105 not included
 		z = np.append((((x * 0.06103515625)/0.04382512987)/14.69595)*33)
 	return z
+
+def get_angles_from_quat(qw, qx, qy, qz):
+	#convert quaterion to euler angle
+	#return array of angles
 
 def main():
 	ser = serial.Serial(PORT, BAUD_RATE)
