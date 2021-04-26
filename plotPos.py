@@ -34,6 +34,21 @@ def get_velocity_vector(magnitude, angle_x, angle_y, angle_z):
     v_z = magnitude * math.sin(angle_y*math.pi/180)
     return [v_x, v_y, v_z]
 
+def get_velocity_x_component(magnitude, angle_x, angle_y, angle_z):
+    v_xy = magnitude * math.cos(angle_y*math.pi/180)
+    v_x = v_xy * math.cos(angle_x*math.pi/180)
+    return v_x
+
+def get_velocity_y_component(magnitude, angle_x, angle_y, angle_z):
+    v_xy = magnitude * math.cos(angle_y*math.pi/180)
+    v_y = v_xy * math.sin(angle_x*math.pi/180)
+    return v_y
+
+def get_velocity_y_component(magnitude, angle_x, angle_y, angle_z):
+    v_xy = magnitude * math.cos(angle_y*math.pi/180)
+    v_z = magnitude * math.sin(angle_y*math.pi/180)
+    return v_z
+
 def get_next_position_vector(current_pos, v_x, v_y, v_z, 
         integrate_velocity=False):
     if not(integrate_velocity):
@@ -92,6 +107,12 @@ def main():
     x_positions = np.array([0])
     y_positions = np.array([0])
     z_positions = np.array([0])
+    euler_x_angles = np.array([0])
+    euler_y_angles = np.array([0])
+    euler_z_angles = np.array([0])
+    velocity_x_components = np.array([0])
+    velocity_y_components = np.array([0])
+    velocity_z_components = np.array([0])
 
     if (READ_SERIAL_PORT):
         ser = serial.Serial(PORT, BAUD_RATE)
@@ -146,29 +167,49 @@ def main():
 
             data = str(ser.readline(), 'utf-8')
             splitData = data.split(',')
-            x = float(splitData[8])
-            y = float(splitData[9])
-            z = float(splitData[10])
+
+            if (len(euler_x_angles) == 1 and euler_x_angles[0] == 0):
+                euler_x_angles[0] = float(splitData[8])
+                euler_y_angles[0] = float(splitData[9])
+                euler_z_angles[0] = float(splitData[10])
+            else:
+                euler_x_angles = np.append(euler_x_angles, splitData[8])
+                euler_y_angles = np.append(euler_y_angles, splitData[9])
+                euler_z_angles = np.append(euler_z_angles, splitData[10])
+            
             line_num = int(splitData[12])
 
             # if time.time() - time_counter == 1:
             #   VELOCITY_MAGNITUDE += 1
             #   time_counter = time.time() 
 
-            v_x, v_y, v_z = get_velocity_vector(VELOCITY_MAGNITUDE, x, -y, z)
+    for i in np.arange(0, len(euler_x_angles)+1, 1)
+        if i == 0:
+            velocity_x_components[i] = get_velocity 
+            velocity_y_components[i],
+            velocity_z_components[i] = get_velocity_vector(VELOCITY_MAGNITUDE, 
+                                                            euler_x_angles[i],
+                                                            -euler_y_angles[i],
+                                                            euler_z_angles[i])
+        else:
+            velocity_x_componentsget_velocity_vector(VELOCITY_MAGNITUDE, 
+                                                            euler_x_angles[i],
+                                                            -euler_y_angles[i],
+                                                            euler_z_angles[i])
+    v_x, v_y, v_z = get_velocity_vector(VELOCITY_MAGNITUDE, x, -y, z)
 
-            if current_pos == INITIAL_POSITION:
-                current_pos = get_next_position_vector(
-                    INITIAL_POSITION, v_x, v_y, v_z)
-            else:
-                current_pos = get_next_position_vector(
-                    current_pos, v_x, v_y, v_z)
-            # print(current_pos)
-            print(line_num, " ", current_pos)
+    if current_pos == INITIAL_POSITION:
+        current_pos = get_next_position_vector(
+            INITIAL_POSITION, v_x, v_y, v_z)
+    else:
+        current_pos = get_next_position_vector(
+            current_pos, v_x, v_y, v_z)
+    # print(current_pos)
+    print(line_num, " ", current_pos)
 
-            x_positions = np.append(x_positions, current_pos[0])
-            y_positions = np.append(y_positions, current_pos[1])
-            z_positions = np.append(z_positions, current_pos[2])
+    x_positions = np.append(x_positions, current_pos[0])
+    y_positions = np.append(y_positions, current_pos[1])
+    z_positions = np.append(z_positions, current_pos[2])
 
     map = plt.figure()
     map_ax = Axes3D(map)
