@@ -46,7 +46,7 @@ def get_next_position_vector(current_pos, v_x, v_y, v_z,
                 current_pos[1] + r_y, 
                 current_pos[2] + r_z]
 
-def get_total_row_val(fn)
+def get_total_row_val(fn):
     with open(fn) as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=',')
         next(csv_reader) #skip header row
@@ -55,12 +55,22 @@ def get_total_row_val(fn)
             row_count += 1
     return row_count
 
-def read_csv(fn, p, qw, qx, qy, qz, ex, ey, ez):
+def read_csv(fn, p, qw, qx, qy, qz, ex, ey, ez, v):
     with open(fn) as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=',')
         next(csv_reader) #skip header row
         for row in csv_reader:
             # assign values in each col to appropriate array
+            p = row[PRESSURE_INDEX]
+            qw = row[QUAT_W_INDEX]
+            qx = row[QUAT_X_INDEX]
+            qy = row[QUAT_Y_INDEX]
+            qz = row[QUAT_Z_INDEX]
+            ex = row[EULER_X_INDEX]
+            ey = row[EULER_Y_INDEX]
+            ez = row[EULER_Z_INDEX]
+            # v = row[VELOCITY_INDEX]
+    # return [p, qw, qx, qy, qz, ex, ey, ez, v]
 
 def get_z_position(p, z):
     for x in p:
@@ -68,9 +78,12 @@ def get_z_position(p, z):
         z = np.append((((x * 0.06103515625)/0.04382512987)/14.69595)*33)
     return z
 
+#convert quaterion to angle
 def get_angles_from_quat(qw, qx, qy, qz):
-    #convert quaterion to euler angle
-    #return array of angles
+    x = atan2(2.0 * (qx*qy + qz*qw), (qx**2 - qy**2 - qz**2 + qw**2))
+    y = asin(-2.0 * (qx*qz - qy*qw) / (qx**2 + qy**2 + qz**2 + qw**2))
+    z = atan2(2.0 * (qy*qz + qx*qw), (-qx**2 - qy**2 + qz**2 + qw**2))
+    return [x, y, z]
 
 def main():
     ser = serial.Serial(PORT, BAUD_RATE)
