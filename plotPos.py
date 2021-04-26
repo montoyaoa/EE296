@@ -25,7 +25,7 @@ EULER_Z_INDEX = 17
 #change as needed
 PORT = '/dev/cu.usbserial-1410'
 BAUD_RATE = 115200
-READ_SERIAL_PORT = True
+READ_SERIAL_PORT = False
 
 def get_velocity_vector(magnitude, angle_x, angle_y, angle_z):
     v_xy = magnitude * math.cos(angle_y*math.pi/180)
@@ -62,6 +62,7 @@ def get_next_position_vector(current_pos, v_x, v_y, v_z,
         return [current_pos[0] + r_x, 
                 current_pos[1] + r_y, 
                 current_pos[2] + r_z]
+
 # def get_next_x_postion(v)
 
 def get_total_row_val(fn):
@@ -73,7 +74,8 @@ def get_total_row_val(fn):
             row_count += 1
     return row_count
 
-def read_csv(fn, p, qw, qx, qy, qz, ex, ey, ez, v):
+# def read_csv(fn, p, qw, qx, qy, qz, ex, ey, ez, v):
+def read_csv(fn, ex, ey, ez):
     with open(fn) as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=',')
         next(csv_reader) #skip header row
@@ -87,13 +89,13 @@ def read_csv(fn, p, qw, qx, qy, qz, ex, ey, ez, v):
                 # qy = row[QUAT_Y_INDEX]
                 # qz = row[QUAT_Z_INDEX]
                 # v = row[VELOCITY_INDEX]
-                ex[0] = row[EULER_X_INDEX]
-                ey[0] = row[EULER_Y_INDEX]
-                ez[0] = row[EULER_Z_INDEX]
+                ex[0] = float(row[EULER_X_INDEX])
+                ey[0] = float(row[EULER_Y_INDEX])
+                ez[0] = float(row[EULER_Z_INDEX])
             else:
-                ex = np.append(ex, row[EULER_X_INDEX])
-                ey = np.append(ey, row[EULER_X_INDEX])
-                ez = np.append(ez, row[EULER_X_INDEX])
+                ex = np.append(ex, float(row[EULER_X_INDEX]))
+                ey = np.append(ey, float(row[EULER_X_INDEX]))
+                ez = np.append(ez, float(row[EULER_X_INDEX]))
             row_count += 1
     # return [p, qw, qx, qy, qz, ex, ey, ez, v]
     return [ex, ey, ez]
@@ -116,9 +118,9 @@ def main():
     x_positions = np.array([0])
     y_positions = np.array([0])
     z_positions = np.array([0])
-    euler_x_angles = np.array([0])
-    euler_y_angles = np.array([0])
-    euler_z_angles = np.array([0])
+    euler_x_angles = np.array([0], dtype = 'f')
+    euler_y_angles = np.array([0], dtype = 'f')
+    euler_z_angles = np.array([0], dtype = 'f')
     velocity_x_components = np.array([0])
     velocity_y_components = np.array([0])
     velocity_z_components = np.array([0])
@@ -195,10 +197,13 @@ def main():
         total_rows = get_total_row_val(FILE_NAME)
 
         # for i in np.arange(0, total_rows, 1):
-        euler_x_angles, euler_y_angles, euler_z_angles = read_csv(FILE_NAME)
+        euler_x_angles, euler_y_angles, euler_z_angles = read_csv(FILE_NAME,
+                                                                    euler_x_angles,
+                                                                    euler_y_angles,
+                                                                    euler_z_angles)
 
 
-    for i in np.arange(0, len(euler_x_angles)+1, 1):
+    for i in np.arange(0, len(euler_x_angles), 1):
         if i == 0:
             velocity_x_components[i] = get_velocity_x_component(VELOCITY_MAGNITUDE, 
                                                                 euler_x_angles[i],
@@ -229,7 +234,7 @@ def main():
                                                                     -euler_y_angles[i],
                                                                     euler_z_angles[i]))
 
-    for j in np.arange(0, len(velocity_x_components)+1, 1):
+    for j in np.arange(0, len(velocity_x_components), 1):
         x_positions = np.append(x_positions, current_pos[0])
         y_positions = np.append(y_positions, current_pos[1])
         z_positions = np.append(z_positions, current_pos[2])
