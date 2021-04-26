@@ -77,7 +77,7 @@ def read_csv(fn, p, qw, qx, qy, qz, ex, ey, ez, v):
     with open(fn) as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=',')
         next(csv_reader) #skip header row
-        row count = 0
+        row_count = 0
         for row in csv_reader:
             if row_count == 0:
                 # assign values in each col to appropriate array
@@ -217,17 +217,17 @@ def main():
                                             get_velocity_x_component(VELOCITY_MAGNITUDE, 
                                                                     euler_x_angles[i],
                                                                     -euler_y_angles[i],
-                                                                    euler_z_angles[i])
+                                                                    euler_z_angles[i]))
             velocity_y_components = np.append(velocity_y_components, 
                                             get_velocity_y_component(VELOCITY_MAGNITUDE, 
                                                                     euler_x_angles[i],
                                                                     -euler_y_angles[i],
-                                                                    euler_z_angles[i])
+                                                                    euler_z_angles[i]))
             velocity_z_components = np.append(velocity_z_components, 
                                             get_velocity_z_component(VELOCITY_MAGNITUDE, 
                                                                     euler_x_angles[i],
                                                                     -euler_y_angles[i],
-                                                                    euler_z_angles[i])
+                                                                    euler_z_angles[i]))
 
     for j in np.arange(0, len(velocity_x_components)+1, 1):
         x_positions = np.append(x_positions, current_pos[0])
