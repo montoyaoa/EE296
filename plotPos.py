@@ -62,6 +62,7 @@ def get_next_position_vector(current_pos, v_x, v_y, v_z,
         return [current_pos[0] + r_x, 
                 current_pos[1] + r_y, 
                 current_pos[2] + r_z]
+# def get_next_x_postion(v)
 
 def get_total_row_val(fn):
     with open(fn) as csv_file:
@@ -193,10 +194,11 @@ def main():
     else:
         total_rows = get_total_row_val(FILE_NAME)
 
-        for i in np.arange(0, total_rows, 1):
+        # for i in np.arange(0, total_rows, 1):
+        euler_x_angles, euler_y_angles, euler_z_angles = read_csv(FILE_NAME)
 
 
-    for j in np.arange(0, len(euler_x_angles)+1, 1):
+    for i in np.arange(0, len(euler_x_angles)+1, 1):
         if i == 0:
             velocity_x_components[i] = get_velocity_x_component(VELOCITY_MAGNITUDE, 
                                                                 euler_x_angles[i],
@@ -227,19 +229,24 @@ def main():
                                                                     -euler_y_angles[i],
                                                                     euler_z_angles[i])
 
-    for k in np.arange(0, len(velocity_x_components)+1, 1):
-        if current_pos == INITIAL_POSITION:
-            current_pos = get_next_position_vector(
-                INITIAL_POSITION, v_x, v_y, v_z)
-        else:
-            current_pos = get_next_position_vector(
-                current_pos, v_x, v_y, v_z)
+    for j in np.arange(0, len(velocity_x_components)+1, 1):
+        x_positions = np.append(x_positions, current_pos[0])
+        y_positions = np.append(y_positions, current_pos[1])
+        z_positions = np.append(z_positions, current_pos[2])
+
+        current_pos = get_next_position_vector(current_pos, 
+                                                velocity_x_components[j], 
+                                                velocity_y_components[j], 
+                                                velocity_z_components[j])
+
+        # if current_pos == INITIAL_POSITION:
+        #     current_pos = get_next_position_vector(
+        #         INITIAL_POSITION, v_x, v_y, v_z)
+        # else:
+        #     current_pos = get_next_position_vector(
+        #         current_pos, v_x, v_y, v_z)
     # print(current_pos)
     # print(line_num, " ", current_pos)
-
-    x_positions = np.append(x_positions, current_pos[0])
-    y_positions = np.append(y_positions, current_pos[1])
-    z_positions = np.append(z_positions, current_pos[2])
 
     map = plt.figure()
     map_ax = Axes3D(map)
