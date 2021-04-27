@@ -10,7 +10,7 @@ import time
 VELOCITY_MAGNITUDE = 1
 INITIAL_POSITION = [0, 0, 0]
 
-FILE_NAME = '04262201_edit.csv'
+FILE_NAME = '04270005.csv'
 
 PRESSURE_INDEX = 5
 QUAT_W_INDEX = 11
@@ -121,9 +121,9 @@ def main():
     euler_x_angles = np.array([0], dtype = 'f')
     euler_y_angles = np.array([0], dtype = 'f')
     euler_z_angles = np.array([0], dtype = 'f')
-    velocity_x_components = np.array([0])
-    velocity_y_components = np.array([0])
-    velocity_z_components = np.array([0])
+    velocity_x_compnents = np.array([0])
+    velocity_y_compnents = np.array([0])
+    velocity_z_compnents = np.array([0])
 
     if (READ_SERIAL_PORT):
         ser = serial.Serial(PORT, BAUD_RATE)
@@ -197,52 +197,66 @@ def main():
         total_rows = get_total_row_val(FILE_NAME)
 
         # for i in np.arange(0, total_rows, 1):
-        euler_x_angles, euler_y_angles, euler_z_angles = read_csv(FILE_NAME,
-                                                                    euler_x_angles,
-                                                                    euler_y_angles,
-                                                                    euler_z_angles)
+        euler_x_angles, euler_y_angles, euler_z_angles = read_csv(
+            FILE_NAME,
+            euler_x_angles,
+            euler_y_angles,
+            euler_z_angles)
 
 
     for i in np.arange(0, len(euler_x_angles), 1):
         if i == 0:
-            velocity_x_components[i] = get_velocity_x_component(VELOCITY_MAGNITUDE, 
-                                                                euler_x_angles[i],
-                                                                -euler_y_angles[i],
-                                                                euler_z_angles[i])
-            velocity_y_components[i] = get_velocity_y_component(VELOCITY_MAGNITUDE, 
-                                                                euler_x_angles[i],
-                                                                -euler_y_angles[i],
-                                                                euler_z_angles[i])
-            velocity_z_components[i] = get_velocity_z_component(VELOCITY_MAGNITUDE, 
-                                                                euler_x_angles[i],
-                                                                -euler_y_angles[i],
-                                                                euler_z_angles[i])
+            velocity_x_compnents[i] = get_velocity_x_component(
+                VELOCITY_MAGNITUDE, 
+                euler_x_angles[i],
+                -euler_y_angles[i],
+                euler_z_angles[i])
+            velocity_y_compnents[i] = get_velocity_y_component(
+                VELOCITY_MAGNITUDE, 
+                euler_x_angles[i],
+                -euler_y_angles[i],
+                euler_z_angles[i])
+            velocity_z_compnents[i] = get_velocity_z_component(
+                VELOCITY_MAGNITUDE, 
+                euler_x_angles[i],
+                -euler_y_angles[i],
+                euler_z_angles[i])
         else:
-            velocity_x_components = np.append(velocity_x_components, 
-                                            get_velocity_x_component(VELOCITY_MAGNITUDE, 
-                                                                    euler_x_angles[i],
-                                                                    -euler_y_angles[i],
-                                                                    euler_z_angles[i]))
-            velocity_y_components = np.append(velocity_y_components, 
-                                            get_velocity_y_component(VELOCITY_MAGNITUDE, 
-                                                                    euler_x_angles[i],
-                                                                    -euler_y_angles[i],
-                                                                    euler_z_angles[i]))
-            velocity_z_components = np.append(velocity_z_components, 
-                                            get_velocity_z_component(VELOCITY_MAGNITUDE, 
-                                                                    euler_x_angles[i],
-                                                                    -euler_y_angles[i],
-                                                                    euler_z_angles[i]))
+            velocity_x_compnents = np.append(
+                velocity_x_compnents, 
+                get_velocity_x_component(
+                    VELOCITY_MAGNITUDE, 
+                    euler_x_angles[i],
+                    -euler_y_angles[i],
+                    euler_z_angles[i]))
+            velocity_y_compnents = np.append(
+                velocity_y_compnents, 
+                get_velocity_y_component(
+                    VELOCITY_MAGNITUDE, 
+                    euler_x_angles[i],
+                    -euler_y_angles[i],
+                    euler_z_angles[i]))
+            velocity_z_compnents = np.append(
+                velocity_z_compnents, 
+                get_velocity_z_component(
+                    VELOCITY_MAGNITUDE, 
+                    euler_x_angles[i],
+                    -euler_y_angles[i],
+                    euler_z_angles[i]))
 
-    for j in np.arange(0, len(velocity_x_components), 1):
+    for j in np.arange(0, len(velocity_x_compnents), 1):
         x_positions = np.append(x_positions, current_pos[0])
         y_positions = np.append(y_positions, current_pos[1])
         z_positions = np.append(z_positions, current_pos[2])
 
-        current_pos = get_next_position_vector(current_pos, 
-                                                velocity_x_components[j], 
-                                                velocity_y_components[j], 
-                                                velocity_z_components[j])
+        current_pos = get_next_position_vector(
+            current_pos, 
+            velocity_x_compnents[j], 
+            velocity_y_compnents[j], 
+            velocity_z_compnents[j])
+
+        # print(current_pos)
+        # print(line_num, " ", current_pos)
 
         # if current_pos == INITIAL_POSITION:
         #     current_pos = get_next_position_vector(
@@ -250,14 +264,12 @@ def main():
         # else:
         #     current_pos = get_next_position_vector(
         #         current_pos, v_x, v_y, v_z)
-    # print(current_pos)
-    # print(line_num, " ", current_pos)
 
     map = plt.figure()
     map_ax = Axes3D(map)
     map_ax.scatter3D(x_positions, y_positions, z_positions)
     map_ax.autoscale(enable=True, axis='both', tight=True)
-    map_ax.set_zlim3d([-50.0, 0.0])
+    map_ax.set_zlim3d([-50.0, 75.0])
     map_ax.set_xlabel('X')
     map_ax.set_ylabel('Y')
     map_ax.set_zlabel('Z')
