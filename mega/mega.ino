@@ -1,4 +1,4 @@
-//PINOUTS FOR MEGA:
+//PIN ASSIGNMENTS FOR MEGA:
 //GPS
 //RX -> 14 (TX3)
 //TX -> 15 (RX3)
@@ -19,11 +19,14 @@
 //ANODE -> ARDUINO, CATHODE -> 220 OHM -> GND
 //RED (GPS LOCK) -> 8
 //YELLOW (SD AVAILABLE) -> 9
-//GREEN (WATER INTRUSION) -> 10
-//BLUE (ORIENTATION CALIBRATION) -> 11
+//GREEN (ORIENTATION CALIBRATION) -> 10
+//BLUE (WATER INTRUSION) -> 11
 //
 //RESET
 //RST -> 2
+//
+//POWERBOOST
+//LB -> 7
 
 #include "RTClib.h"
 #include <Adafruit_GPS.h>
@@ -41,10 +44,10 @@
 #define BNO055_SAMPLERATE_DELAY_MS 100
 
 //set this to true to ignore the need to have a GPS fix to continue initialization
-#define IGNOREGPSFIX true
+#define IGNOREGPSFIX false
 
 //set this to true to write to the Serial IO for debugging
-#define SERIALLOGGING true
+#define SERIALLOGGING false
 
 //define pin assignments
 #define GPSSerial Serial3
@@ -56,6 +59,8 @@
 #define GREENLED 10
 #define BLUELED 11
 #define RESETPIN 2
+#define LOWBATTERY 7
+
 
 //define global variables
 uint32_t timer = millis();
@@ -76,7 +81,7 @@ RTC_DS3231 rtc;
 void setup() {
   // connect at 115200 so we can read the GPS fast enough and echo without dropping chars
   // also spit it out
-  Serial.begin(BAUD_RATE);
+  if(SERIALLOGGING) { Serial.begin(BAUD_RATE); }
   digitalWrite(RESETPIN, HIGH);
 
   pinMode(REDLED, OUTPUT);
@@ -99,22 +104,24 @@ void setup() {
 
   initializeGPS();
 
+  //only perform the GPS to RTC DateTime alignment once, after initial fix
+  alignDateTime(rtc.now());
+  
   initializeSD();
 }
 
 void loop() {
-  DateTime now = rtc.now();
   readAndParseGPS();
 
   statusLEDs();
-
+  
   // approximately every second or so, print out the current stats
-  if (millis() - timer > 1000) {
-    alignDateTime(now);
+  if (millis() - timer > 1100) {
+    
     //reset the timer
     timer = millis();
     //add sensor data to a single output string
-    timeString(now);
+    timeString(rtc.now());
     gpsString();
     pressureString();
     waterIntrusionString();
@@ -137,6 +144,11 @@ void initializeGPS() {
   GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCONLY);
   //update the GPS data once per second
   GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);
+  // Request updates on antenna status, comment out to keep quiet
+  GPS.sendCommand(PGCMD_ANTENNA);
+  delay(1000);
+  // Ask for firmware version
+  GPSSerial.println(PMTK_Q_RELEASE);
 
   //ignore the need for a GPS fix if not necessary
   if(!IGNOREGPSFIX){
@@ -202,9 +214,9 @@ void initializeSD() {
 }
 
 void readAndParseGPS() {
-  // read data from the GPS in the 'main loop'
+   //read data from the GPS in the 'main loop'
   char c = GPS.read();
-  // if a sentence is received, we can check the checksum, parse it...
+   //if a sentence is received, we can check the checksum, parse it...
   if (GPS.newNMEAreceived()) {
     //Serial.print(GPS.lastNMEA()); // this also sets the newNMEAreceived() flag to false
     if (!GPS.parse(GPS.lastNMEA())) // this also sets the newNMEAreceived() flag to false
@@ -238,35 +250,51 @@ void writeToSD() {
   dataFile.close();
 }
 
-void alignDateTime(DateTime now) {
- if(GPS.fix == 1 && (now.year() != GPS.year || now.month() != GPS.month || now.day() != GPS.day || now.hour() != GPS.hour || now.minute() != GPS.minute || now.second() != GPS.seconds)) {
-      if(SERIALLOGGING) {
-      Serial.println("Adjusting RTC time to match GPS fix");
+void alignDateTime(DateTime currentTime) {
+ if(GPS.fix == 1) {
+    if(currentTime.year() != (GPS.year + 2000))
+      if(SERIALLOGGING) { Serial.print("year mismatch"); }
+    else if(currentTime.month() != GPS.month)
+      if(SERIALLOGGING) { Serial.print("month mismatch"); }
+    else if(currentTime.day() != GPS.day)
+      if(SERIALLOGGING) { Serial.print("day mismatch"); }
+    else if(currentTime.hour() != GPS.hour)
+      if(SERIALLOGGING) { Serial.print("hour mismatch"); }
+    else if(currentTime.minute() != GPS.minute)
+      if(SERIALLOGGING) { Serial.print("minute mismatch"); }
+    else if(currentTime.second() != GPS.seconds) {
+      if(SERIALLOGGING) { 
+        Serial.println("second mismatch: ");
+        Serial.print("GPS seconds: ");
+        Serial.println(GPS.seconds);
+        Serial.print("RTC seconds: ");
+        Serial.println(currentTime.second());
       }
+      
       rtc.adjust(DateTime(GPS.year, GPS.month, GPS.day, GPS.hour, GPS.minute, GPS.seconds));
     }
+  }
 }
 
-void timeString(DateTime now) {
-  outputString.concat(now.day());
+void timeString(DateTime currentTime) {
+  outputString.concat(currentTime.month());
   outputString.concat("/");
-  outputString.concat(now.month());
-  outputString.concat(now.year());
+  outputString.concat(currentTime.day());
+  outputString.concat("/");
+  outputString.concat(currentTime.year());
   outputString.concat(", ");
-  if (now.hour() < 10) { outputString.concat("0"); }
-  outputString.concat(now.hour());
+  if (currentTime.hour() < 10) { outputString.concat("0"); }
+  outputString.concat(currentTime.hour());
   outputString.concat(":");
-  if (now.minute() < 10) { outputString.concat("0"); }
-  outputString.concat(now.minute());
+  if (currentTime.minute() < 10) { outputString.concat("0"); }
+  outputString.concat(currentTime.minute());
   outputString.concat(":");
-  if (now.second() < 10) { outputString.concat("0"); }
-  outputString.concat(now.second());
+  if (currentTime.second() < 10) { outputString.concat("0"); }
+  outputString.concat(currentTime.second());
   outputString.concat(", ");
 }
 void gpsString() {
-
-
-  if (GPS.fix) {
+  if(GPS.fix) {
     outputString.concat(String(GPS.latitudeDegrees, 5));
     outputString.concat(", ");
     outputString.concat(String(GPS.longitudeDegrees, 5));
@@ -288,11 +316,11 @@ void pressureString() {
 
 void waterIntrusionString() {
   int waterLevel = analogRead(WATERPIN);
-  if(waterLevel >= 250) {
-    digitalWrite(GREENLED, HIGH);
+  if(waterLevel > 0) {
+    digitalWrite(BLUELED, HIGH);
   }
   else {
-    digitalWrite(GREENLED, LOW);
+    digitalWrite(BLUELED, LOW);
   }
   outputString.concat(", ");
   outputString.concat(waterLevel);
@@ -311,10 +339,10 @@ void calibrationString() {
   outputString.concat(int(sys));
   outputString.concat(", ");
   if((int(accel) == 3) && (int(gyro) == 3) && (int(magne) == 3)) {
-    digitalWrite(BLUELED, HIGH);
+    digitalWrite(GREENLED, HIGH);
   }
   else {
-    digitalWrite(BLUELED, LOW);
+    digitalWrite(GREENLED, LOW);
   }
 }
 
