@@ -259,8 +259,10 @@ def main():
 
     map = plt.figure()
     map_ax = Axes3D(map)
-    map_ax.scatter3D(x_positions, y_positions, z_positions)
-    # map_ax.plot(x_positions, y_positions, z_positions)
+    map_ax.scatter3D(
+        x_positions[0], y_positions[0], z_positions[0], marker='s')
+    # map_ax.scatter3D(x_positions[1:], y_positions[1:], z_positions[1:])
+    map_ax.plot(x_positions[1:], y_positions[1:], z_positions[1:])
     map_ax.autoscale(enable=True, axis='both', tight=True)
     # map_ax.set_zlim3d([-100.0, 0])
     map_ax.set_xlabel('X')
