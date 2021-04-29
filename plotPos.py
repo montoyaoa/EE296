@@ -299,6 +299,7 @@ def main():
     map_ax.set_ylabel('Y')
     map_ax.set_zlabel('Z')
     plt.show()
+    map.savefig(FILE_NAME.split('.')[0]+'.png')
 
 if __name__ == '__main__':
     main()
