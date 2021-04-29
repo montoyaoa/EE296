@@ -86,7 +86,7 @@ def get_starting_row(fn, t):
         next(csv_reader) #skip header row
         row_count = 0
         for row in csv_reader:
-            if d < datetime.strptime(row[TIME_INDEX], " %H:%M:%S"):
+            if d <= datetime.strptime(row[TIME_INDEX], " %H:%M:%S"):
                 break
             else:
                 row_count += 1
@@ -225,7 +225,7 @@ def main():
             #   time_counter = time.time() 
     else:
         total_rows = get_total_row_val(FILE_NAME)
-        
+
         t = ht_to_gmt(get_start_time_from_csv_file_name(FILE_NAME))
         row_start = get_starting_row(FILE_NAME, t)
 
