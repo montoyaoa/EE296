@@ -10,7 +10,7 @@ import time
 VELOCITY_MAGNITUDE = 1
 INITIAL_POSITION = [0, 0, 0]
 
-FILE_NAME = '04262201_edit.csv'
+FILE_NAME = '04262201_130700.csv'
 
 PRESSURE_INDEX = 5
 QUAT_W_INDEX = 11
@@ -62,7 +62,7 @@ def get_next_position(current_pos, v_x, v_y, v_z, integrate_velocity=False):
                 current_pos[1] + r_y, 
                 current_pos[2] + r_z]
 
-def get_ht_from_csv_file_name(fn):
+def get_start_time_from_csv_file_name(fn):
     ht = fn.split('_')
     ht = ht[1].split('.')
     return ht[0]
@@ -270,10 +270,10 @@ def main():
         #         current_pos, v_x, v_y, v_z)
 
     map = plt.figure(figsize=(16, 8))
-    # map_ax = Axes3D(map)
+    map_ax = Axes3D(map)
     # map_ax = map.add_subplot(121)
 
-    map_ax = map.add_subplot(122, projection='3d')
+    # map_ax = map.add_subplot(122, projection='3d')
     map_ax.scatter3D(
         x_positions[0], y_positions[0], z_positions[0], marker='s')
     # map_ax.scatter3D(x_positions[1:], y_positions[1:], z_positions[1:])
