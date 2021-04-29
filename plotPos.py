@@ -11,7 +11,7 @@ import time
 VELOCITY_MAGNITUDE = 1
 INITIAL_POSITION = [0, 0, 0]
 
-FILE_NAME = '04262201_130700.csv'
+FILE_NAME = 'csv/04262201_130700.csv'
 
 TIME_INDEX = 1
 PRESSURE_INDEX = 5
@@ -298,8 +298,8 @@ def main():
     map_ax.set_xlabel('X')
     map_ax.set_ylabel('Y')
     map_ax.set_zlabel('Z')
+    map.savefig('figures/'+FILE_NAME.split('/')[1].split('.')[0]+'.png')
     plt.show()
-    map.savefig(FILE_NAME.split('.')[0]+'.png')
 
 if __name__ == '__main__':
     main()
