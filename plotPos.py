@@ -62,20 +62,20 @@ def get_next_position(current_pos, v_x, v_y, v_z, integrate_velocity=False):
                 current_pos[1] + r_y, 
                 current_pos[2] + r_z]
 
-# def get_next_x_postion(v)
-
-def ht_to_gmt(t):
-    t = t.split(':')
-    t[0] += 10
-    if (t[0] >= 24):
-        t[0] -= 24
-    t = t[0] + t[1]
-    return t
-
 def get_ht_from_csv_file_name(fn):
     ht = fn.split('_')
     ht = ht[1].split('.')
     return ht[0]
+
+def ht_to_gmt(t):
+    hour = int(t[0:1])
+    min = t[2:3]
+    sec = t[4:5]
+    hour += 10
+    if (hour >= 24):
+        hour -= 24
+    t = [string(hour), min, sec]
+    return ':'.join(t)
 
 def get_total_row_val(fn):
     with open(fn) as csv_file:
