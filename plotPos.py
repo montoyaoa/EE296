@@ -1,3 +1,4 @@
+from datetime import datetime
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import pyplot as plt
 import csv
@@ -12,6 +13,7 @@ INITIAL_POSITION = [0, 0, 0]
 
 FILE_NAME = '04262201_130700.csv'
 
+TIME_INDEX = 1
 PRESSURE_INDEX = 5
 QUAT_W_INDEX = 11
 QUAT_X_INDEX = 12
@@ -76,6 +78,19 @@ def ht_to_gmt(t):
         hour -= 24
     t = [string(hour), min, sec]
     return ':'.join(t)
+
+def get_starting_row(fn, t):
+    d = datetime.strptime(t, "%H:%M:%S")
+    with open(fn) as csv_file:
+        csv_reader = csv.reader(csv_file, delimiter=',')
+        next(csv_reader) #skip header row
+        row_count = 0
+        for row in csv_reader:
+            if d < row[TIME_INDEX]:
+                break
+            else:
+                row_count += 1
+    return row_count
 
 def get_total_row_val(fn):
     with open(fn) as csv_file:
