@@ -64,10 +64,14 @@ def get_next_position(current_pos, v_x, v_y, v_z, integrate_velocity=False):
                 current_pos[1] + r_y, 
                 current_pos[2] + r_z]
 
-def get_start_time_from_csv_file_name(fn):
+def get_start_stop_time_from_file_name(fn, get_stop_time=False):
     ht = fn.split('_')
-    ht = ht[1].split('.')
-    return ht[0]
+    if not(get_stop_time):
+        return ht[1].split('.')[0]
+    else:
+        start = ht[1]
+        stop = ht[2].split('.')[0]
+        return [start, stop]
 
 def ht_to_gmt(t):
     hour = int(t[0:2])
@@ -226,7 +230,7 @@ def main():
     else:
         total_rows = get_total_row_val(FILE_NAME)
 
-        t = ht_to_gmt(get_start_time_from_csv_file_name(FILE_NAME))
+        t = ht_to_gmt(get_start_stop_time_from_file_name(FILE_NAME))
         row_start = get_starting_row(FILE_NAME, t)
 
         # for i in np.arange(0, total_rows, 1):
