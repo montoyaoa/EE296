@@ -49,8 +49,7 @@ def get_velocity_z_component(magnitude, angle_y):
     v_z = magnitude * math.sin(angle_y*math.pi/180)
     return v_z
 
-def get_next_position_vector(current_pos, v_x, v_y, v_z, 
-        integrate_velocity=False):
+def get_next_position(current_pos, v_x, v_y, v_z, integrate_velocity=False):
     if not(integrate_velocity):
         return [current_pos[0] + v_x, 
                 current_pos[1] + v_y, 
@@ -70,6 +69,9 @@ def ht_to_gmt(t):
     if (t >= 24):
         t -= 24
     return t
+
+def parse_csv_file_name(fn):
+
 
 def get_total_row_val(fn):
     with open(fn) as csv_file:
@@ -247,7 +249,7 @@ def main():
         y_positions = np.append(y_positions, current_pos[1])
         z_positions = np.append(z_positions, current_pos[2])
 
-        current_pos = get_next_position_vector(
+        current_pos = get_next_position(
             current_pos, 
             velocity_x_components[j], 
             velocity_y_components[j], 
@@ -257,10 +259,10 @@ def main():
         # print(line_num, " ", current_pos)
 
         # if current_pos == INITIAL_POSITION:
-        #     current_pos = get_next_position_vector(
+        #     current_pos = get_next_position(
         #         INITIAL_POSITION, v_x, v_y, v_z)
         # else:
-        #     current_pos = get_next_position_vector(
+        #     current_pos = get_next_position(
         #         current_pos, v_x, v_y, v_z)
 
     map = plt.figure(figsize=(16, 8))
