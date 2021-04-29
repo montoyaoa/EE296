@@ -65,6 +65,12 @@ def get_next_position_vector(current_pos, v_x, v_y, v_z,
 
 # def get_next_x_postion(v)
 
+def ht_to_gmt(t):
+    t += 10
+    if (t >= 24):
+        t -= 24
+    return t
+
 def get_total_row_val(fn):
     with open(fn) as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=',')
@@ -260,7 +266,7 @@ def main():
     map = plt.figure(figsize=(16, 8))
     # map_ax = Axes3D(map)
     # map_ax = map.add_subplot(121)
-    
+
     map_ax = map.add_subplot(122, projection='3d')
     map_ax.scatter3D(
         x_positions[0], y_positions[0], z_positions[0], marker='s')
