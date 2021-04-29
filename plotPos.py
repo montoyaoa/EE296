@@ -257,8 +257,11 @@ def main():
         #     current_pos = get_next_position_vector(
         #         current_pos, v_x, v_y, v_z)
 
-    map = plt.figure()
-    map_ax = Axes3D(map)
+    map = plt.figure(figsize=(16, 8))
+    # map_ax = Axes3D(map)
+    # map_ax = map.add_subplot(121)
+    
+    map_ax = map.add_subplot(122, projection='3d')
     map_ax.scatter3D(
         x_positions[0], y_positions[0], z_positions[0], marker='s')
     # map_ax.scatter3D(x_positions[1:], y_positions[1:], z_positions[1:])
