@@ -11,7 +11,7 @@ import time
 VELOCITY_MAGNITUDE = 1
 INITIAL_POSITION = [0, 0, 0]
 
-FILE_NAME = 'csv/04262201_130700.csv'
+FILE_NAME = 'csv/04262201_120700.csv'
 
 TIME_INDEX = 1
 PRESSURE_INDEX = 5
@@ -70,13 +70,13 @@ def get_start_time_from_csv_file_name(fn):
     return ht[0]
 
 def ht_to_gmt(t):
-    hour = int(t[0:1])
-    min = t[2:3]
-    sec = t[4:5]
+    hour = int(t[0:2])
+    min = t[2:4]
+    sec = t[4:6]
     hour += 10
     if (hour >= 24):
         hour -= 24
-    t = [string(hour), min, sec]
+    t = [str(hour), min, sec]
     return ':'.join(t)
 
 def get_starting_row(fn, t):
@@ -86,7 +86,7 @@ def get_starting_row(fn, t):
         next(csv_reader) #skip header row
         row_count = 0
         for row in csv_reader:
-            if d < row[TIME_INDEX]:
+            if d < datetime.strptime(row[TIME_INDEX], " %H:%M:%S"):
                 break
             else:
                 row_count += 1
@@ -102,10 +102,13 @@ def get_total_row_val(fn):
     return row_count
 
 # def read_csv(fn, p, qw, qx, qy, qz, ex, ey, ez, v):
-def read_csv(fn, ex, ey, ez):
+def read_csv(fn, row_start, ex, ey, ez):
     with open(fn) as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=',')
         next(csv_reader) #skip header row
+        #skip to row_start
+        for i in np.arange(0, row_start, 1):
+            next(csv_reader)
         row_count = 0
         for row in csv_reader:
             if row_count == 0:
@@ -222,10 +225,14 @@ def main():
             #   time_counter = time.time() 
     else:
         total_rows = get_total_row_val(FILE_NAME)
+        
+        t = ht_to_gmt(get_start_time_from_csv_file_name(FILE_NAME))
+        row_start = get_starting_row(FILE_NAME, t)
 
         # for i in np.arange(0, total_rows, 1):
         euler_x_angles, euler_y_angles, euler_z_angles = read_csv(
             FILE_NAME,
+            row_start,
             euler_x_angles,
             euler_y_angles,
             euler_z_angles)
@@ -284,7 +291,7 @@ def main():
         #     current_pos = get_next_position(
         #         current_pos, v_x, v_y, v_z)
 
-    map = plt.figure(figsize=(16, 8))
+    map = plt.figure(figsize=(10, 8))
     map_ax = Axes3D(map)
     # map_ax = map.add_subplot(121)
 
