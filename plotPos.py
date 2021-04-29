@@ -65,9 +65,11 @@ def get_next_position(current_pos, v_x, v_y, v_z, integrate_velocity=False):
 # def get_next_x_postion(v)
 
 def ht_to_gmt(t):
-    t += 10
-    if (t >= 24):
-        t -= 24
+    t = t.split(':')
+    t[0] += 10
+    if (t[0] >= 24):
+        t[0] -= 24
+    t = t[0] + t[1]
     return t
 
 def parse_csv_file_name(fn):
