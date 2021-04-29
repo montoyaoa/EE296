@@ -310,7 +310,7 @@ def main():
     map_ax.set_ylabel('Y')
     map_ax.set_zlabel('Z')
     map.savefig('figures/'+FILE_NAME.split('/')[1].split('.')[0]+'.png', 
-                dpi=300)
+                dpi=150)
     plt.show()
 
 if __name__ == '__main__':
