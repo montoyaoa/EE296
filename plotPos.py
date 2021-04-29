@@ -72,8 +72,10 @@ def ht_to_gmt(t):
     t = t[0] + t[1]
     return t
 
-def parse_csv_file_name(fn):
-
+def get_ht_from_csv_file_name(fn):
+    ht = fn.split('_')
+    ht = ht[1].split('.')
+    return ht[0]
 
 def get_total_row_val(fn):
     with open(fn) as csv_file:
