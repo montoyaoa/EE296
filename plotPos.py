@@ -83,7 +83,7 @@ def ht_to_gmt(t):
     t = [str(hour), min, sec]
     return ':'.join(t)
 
-def get_row(fn, t):
+def get_time_row(fn, t):
     d = datetime.strptime(t, "%H:%M:%S")
     with open(fn) as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=',')
@@ -236,11 +236,11 @@ def main():
         # start, end = get_start_end_time_from_file_name(FILE_NAME, True)
         # start = ht_to_gmt(start)
         # end = ht_to_gmt(end)
-        # row_start = get_row(FILE_NAME, start)
-        # row_end = get_row(FILE_NAME, end)
+        # row_start = get_time_row(FILE_NAME, start)
+        # row_end = get_time_row(FILE_NAME, end)
 
         t = ht_to_gmt(get_start_end_time_from_file_name(FILE_NAME))
-        row_start = get_row(FILE_NAME, t)
+        row_start = get_time_row(FILE_NAME, t)
 
 
         # for i in np.arange(0, total_rows, 1):
