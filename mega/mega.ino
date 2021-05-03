@@ -17,7 +17,7 @@
 //
 //LEDS
 //ANODE -> ARDUINO, CATHODE -> 220 OHM -> GND
-//WHITE (FUTURE USE) -> 6
+//WHITE (LOW BATTERY) -> 6
 //RED (GPS LOCK) -> 8
 //YELLOW (SD AVAILABLE) -> 9
 //GREEN (ORIENTATION CALIBRATION) -> 10
@@ -51,7 +51,7 @@
 #define BNO055_SAMPLERATE_DELAY_MS 100
 
 //set this to true to ignore the need to have a GPS fix to continue initialization
-#define IGNOREGPSFIX false
+#define IGNOREGPSFIX true
 
 //set this to true to write to the Serial IO for debugging
 #define SERIALLOGGING false
@@ -61,6 +61,7 @@
 #define PRESSUREPIN A0
 #define WATERPIN A1
 #define CHIPSELECT 53
+#define WHITELED 6
 #define REDLED 8
 #define YELLOWLED 9
 #define GREENLED 10
@@ -94,6 +95,10 @@ void setup() {
   pinMode(YELLOWLED, OUTPUT);
   pinMode(GREENLED, OUTPUT);
   pinMode(BLUELED, OUTPUT);
+  pinMode(WHITELED, OUTPUT);
+
+  //initialize Low battery input
+  pinMode(LOWBATTERY, INPUT);
   
   //initialize orientation sensor
   bno.begin();
@@ -142,6 +147,18 @@ void loop() {
     
     //clear the output string for the next readings
     outputString = "";
+
+      //check if the battery breakout board reports the battery level is low
+      if(digitalRead(LOWBATTERY) == LOW) {
+        //if it is, trap into an infinite loop, flashing the low battery LED
+        //stop cycling through the loop, to avoid drawing extra power
+        while(1){
+          digitalWrite(WHITELED, HIGH);
+          delay(100);
+          digitalWrite(WHITELED, LOW);
+        }
+      }
+    }
   }
 }
 
