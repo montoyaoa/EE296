@@ -218,9 +218,12 @@ def main():
                 euler_y_angles[0] = float(splitData[9])
                 euler_z_angles[0] = float(splitData[10])
             else:
-                euler_x_angles = np.append(euler_x_angles, splitData[8])
-                euler_y_angles = np.append(euler_y_angles, splitData[9])
-                euler_z_angles = np.append(euler_z_angles, splitData[10])
+                euler_x_angles = np.append(
+                    euler_x_angles, float(splitData[8]))
+                euler_y_angles = np.append(
+                    euler_y_angles, float(splitData[9]))
+                euler_z_angles = np.append(
+                    euler_z_angles, float(splitData[10]))
             
             line_num = int(splitData[12])
 
