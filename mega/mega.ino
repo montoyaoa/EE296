@@ -148,15 +148,14 @@ void loop() {
     //clear the output string for the next readings
     outputString = "";
 
-      //check if the battery breakout board reports the battery level is low
-      if(digitalRead(LOWBATTERY) == LOW) {
-        //if it is, trap into an infinite loop, flashing the low battery LED
-        //stop cycling through the loop, to avoid drawing extra power
-        while(1){
-          digitalWrite(WHITELED, HIGH);
-          delay(100);
-          digitalWrite(WHITELED, LOW);
-        }
+    //check if the battery breakout board reports the battery level is low
+    if(digitalRead(LOWBATTERY) == LOW) {
+      //if it is, trap into an infinite loop, flashing the low battery LED
+      //stop cycling through the loop, to avoid drawing extra power
+      while(1){
+        digitalWrite(WHITELED, HIGH);
+        delay(100);
+        digitalWrite(WHITELED, LOW);
       }
     }
   }
